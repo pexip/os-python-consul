@@ -1,0 +1,25 @@
+Source: python-consul
+Section: python
+Priority: optional
+Maintainer: Debian Python Modules Team <python-modules-team@lists.alioth.debian.org>
+Uploaders: Olivier Sallou <osallou@debian.org>
+Build-Depends: debhelper (>= 9), dh-python,
+               python3-all,
+               python3-pytest,
+               python3-setuptools,
+               python3-requests,
+               python3-six
+Standards-Version: 4.0.0
+Homepage: https://github.com/cablehead/python-consul
+Vcs-Browser: https://anonscm.debian.org/cgit/python-modules/python-consul.git
+Vcs-Git: https://anonscm.debian.org/git/python-modules/python-consul.git
+
+Package: python3-consul
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends},
+Recommends: ${python3:Recommends}
+Suggests: ${python3:Suggests}, python3-tornado, python3-twisted
+XB-Python-Egg-Name: consul
+Description: Python client for Consul.io - Python 3.X
+ Consul is a service discovery and configuration tool.
+ This package contains the Python client library for Consul

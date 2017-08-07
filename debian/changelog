@@ -1,0 +1,5 @@
+python-consul (0.7.1-1) unstable; urgency=low
+
+  * First packaging of python-consul (Closes: #826550).
+
+ -- Olivier Sallou <osallou@debian.org>  Mon, 07 Aug 2017 09:37:05 +0000
