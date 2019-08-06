@@ -1,8 +1,14 @@
+python-consul (1.1.0-1pexip1) pexip; urgency=medium
+
+  * Update source to 1.1.0
+
+ -- Knut Saastad <knut.saastad@pexip.com>  Tue, 06 Aug 2019 13:03:42 +0000
+
 python-consul (0.7.1-1pexip1) pexip; urgency=medium
 
   * Prepare Pexip packaging
 
- -- Knut Saastad <Knut@bitflow.io>  Tue, 06 Aug 2019 12:58:29 +0000
+ -- Knut Saastad <knut.saastad@pexip.com>  Mon, 05 Aug 2019 09:02:33 +0000
 
 python-consul (0.7.1-1) unstable; urgency=low
 

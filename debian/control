@@ -5,11 +5,11 @@ Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Debian Python Modules Team <python-modules-team@lists.alioth.debian.org>
 XSBC-Pexip-Original-Uploaders: Olivier Sallou <osallou@debian.org>
 Build-Depends: debhelper (>= 9), dh-python,
-               python3-all,
-               python3-pytest,
-               python3-setuptools,
-               python3-requests,
-               python3-six
+               python3-all, python-all,
+               python3-pytest, python-pytest,
+               python3-setuptools, python-setuptools,
+               python3-requests,python-requests,
+               python3-six, python-six
 Standards-Version: 4.0.0
 Homepage: https://github.com/cablehead/python-consul
 Vcs-Browser: https://anonscm.debian.org/cgit/python-modules/python-consul.git
@@ -23,5 +23,15 @@ Recommends: ${python3:Recommends}
 Suggests: ${python3:Suggests}, python3-tornado, python3-twisted
 XB-Python-Egg-Name: consul
 Description: Python client for Consul.io - Python 3.X
+ Consul is a service discovery and configuration tool.
+ This package contains the Python client library for Consul
+
+Package: python-consul
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends},
+Recommends: ${python:Recommends}
+Suggests: ${python:Suggests}, python-tornado, python-twisted
+XB-Python-Egg-Name: consul
+Description: Python client for Consul.io - Python 2.X
  Consul is a service discovery and configuration tool.
  This package contains the Python client library for Consul
