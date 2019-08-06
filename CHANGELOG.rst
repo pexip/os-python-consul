@@ -1,10 +1,27 @@
 Change log
 ==========
 
-0.7.2-dev
----------
+1.1.0
+-----
 
-* TBD
+* add support for nodemeta to catalog and health end points (thanks
+  @ibrahimmenem)
+* update Check.script to use args, as Consul 1.1 has dropped the script
+  parameter
+
+1.0.1
+-----
+
+* Support for Python 3.4 dropped (sorry)
+* Add support for Consul 1.0.0 (thanks @matusvalo!)
+* Expose all 400 errors and add tests for common callback handler (thanks @bagerard)
+
+0.7.2
+-----
+
+* Add header parameter to http check (thanks @matusvalo)
+* Add basic Transaction HTTP API support (thanks @iandyh)
+* Fix invalid url error when specifying credentials via host (Issue #167)
 
 0.7.1
 -----

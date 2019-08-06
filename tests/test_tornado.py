@@ -1,3 +1,4 @@
+import base64
 import struct
 import time
 
@@ -165,17 +166,30 @@ class TestConsul(object):
             loop.stop()
         loop.run_sync(main)
 
+    def test_transaction(self, loop, consul_port):
+        @gen.coroutine
+        def main():
+            c = consul.tornado.Consul(port=consul_port)
+            value = base64.b64encode(b"1").decode("utf8")
+            d = {"KV": {"Verb": "set", "Key": "asdf", "Value": value}}
+            r = yield c.txn.put([d])
+            assert r["Errors"] is None
+
+            d = {"KV": {"Verb": "get", "Key": "asdf"}}
+            r = yield c.txn.put([d])
+            assert r["Results"][0]["KV"]["Value"] == value
+            loop.stop()
+        loop.run_sync(main)
+
     def test_agent_services(self, loop, consul_port):
         @gen.coroutine
         def main():
             c = consul.tornado.Consul(port=consul_port)
             services = yield c.agent.services()
-            del services['consul']
             assert services == {}
             response = yield c.agent.service.register('foo')
             assert response is True
             services = yield c.agent.services()
-            del services['consul']
             assert services == {
                 'foo': {
                     'Port': 0,
@@ -184,12 +198,11 @@ class TestConsul(object):
                     'ModifyIndex': 0,
                     'EnableTagOverride': False,
                     'Service': 'foo',
-                    'Tags': None,
+                    'Tags': [],
                     'Address': ''}, }
             response = yield c.agent.service.deregister('foo')
             assert response is True
             services = yield c.agent.services()
-            del services['consul']
             assert services == {}
             loop.stop()
         loop.run_sync(main)

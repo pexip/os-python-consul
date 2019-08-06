@@ -1,3 +1,4 @@
+import base64
 import pytest
 import six
 import struct
@@ -148,17 +149,30 @@ class TestAsyncioConsul(object):
 
         loop.run_until_complete(get())
 
+    def test_transaction(self, loop, consul_port):
+        @asyncio.coroutine
+        def main():
+            c = consul.aio.Consul(port=consul_port, loop=loop)
+            value = base64.b64encode(b"1").decode("utf8")
+            d = {"KV": {"Verb": "set", "Key": "asdf", "Value": value}}
+            r = yield from c.txn.put([d])
+            assert r["Errors"] is None
+
+            d = {"KV": {"Verb": "get", "Key": "asdf"}}
+            r = yield from c.txn.put([d])
+            assert r["Results"][0]["KV"]["Value"] == value
+            c.close()
+        loop.run_until_complete(main())
+
     def test_agent_services(self, loop, consul_port):
         @asyncio.coroutine
         def main():
             c = consul.aio.Consul(port=consul_port, loop=loop)
             services = yield from c.agent.services()
-            del services['consul']
             assert services == {}
             response = yield from c.agent.service.register('foo')
             assert response is True
             services = yield from c.agent.services()
-            del services['consul']
             assert services == {
                 'foo': {
                     'Port': 0,
@@ -167,12 +181,11 @@ class TestAsyncioConsul(object):
                     'ModifyIndex': 0,
                     'EnableTagOverride': False,
                     'Service': 'foo',
-                    'Tags': None,
+                    'Tags': [],
                     'Address': ''}, }
             response = yield from c.agent.service.deregister('foo')
             assert response is True
             services = yield from c.agent.services()
-            del services['consul']
             assert services == {}
             c.close()
 
