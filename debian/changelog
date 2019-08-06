@@ -1,3 +1,9 @@
+python-consul (0.7.1-1pexip1) pexip; urgency=medium
+
+  * Prepare Pexip packaging
+
+ -- Knut Saastad <Knut@bitflow.io>  Tue, 06 Aug 2019 12:58:29 +0000
+
 python-consul (0.7.1-1) unstable; urgency=low
 
   * First packaging of python-consul (Closes: #826550).
