@@ -1,3 +1,4 @@
+import base64
 import operator
 import struct
 import time
@@ -158,6 +159,17 @@ class TestConsul(object):
         index, data = c.kv.get('base/', keys=True, separator='/')
         assert data == ['base/base/', 'base/foo']
 
+    def test_transaction(self, consul_port):
+        c = consul.Consul(port=consul_port)
+        value = base64.b64encode(b"1").decode("utf8")
+        d = {"KV": {"Verb": "set", "Key": "asdf", "Value": value}}
+        r = c.txn.put([d])
+        assert r["Errors"] is None
+
+        d = {"KV": {"Verb": "get", "Key": "asdf"}}
+        r = c.txn.put([d])
+        assert r["Results"][0]["KV"]["Value"] == value
+
     def test_event(self, consul_port):
         c = consul.Consul(port=consul_port)
 
@@ -277,12 +289,12 @@ class TestConsul(object):
         time.sleep(40/1000.0)
 
         index, nodes = c.health.service('foo1')
-        assert [
+        assert set([
             check['ServiceID'] for node in nodes
-            for check in node['Checks']] == ['foo1', '']
-        assert [
+            for check in node['Checks']]) == set(['foo1', ''])
+        assert set([
             check['CheckID'] for node in nodes
-            for check in node['Checks']] == ['foo', 'serfHealth']
+            for check in node['Checks']]) == set(['foo', 'serfHealth'])
 
         # Clean up tasks
         assert c.agent.check.deregister('foo') is True
@@ -383,16 +395,16 @@ class TestConsul(object):
 
     def test_agent_self(self, consul_port):
         c = consul.Consul(port=consul_port)
-        assert set(c.agent.self().keys()) == set(['Member', 'Coord', 'Config',
-                                                  'Stats'])
+        assert set(c.agent.self().keys()) == set(['Member', 'Stats', 'Config',
+                                                  'Coord', 'DebugConfig',
+                                                  'Meta'])
 
     def test_agent_services(self, consul_port):
         c = consul.Consul(port=consul_port)
-        assert set(c.agent.services().keys()) == set(['consul'])
         assert c.agent.service.register('foo') is True
-        assert set(c.agent.services().keys()) == set(['consul', 'foo'])
+        assert set(c.agent.services().keys()) == set(['foo'])
         assert c.agent.service.deregister('foo') is True
-        assert set(c.agent.services().keys()) == set(['consul'])
+        assert set(c.agent.services().keys()) == set()
 
         # test address param
         assert c.agent.service.register('foo', address='10.10.10.1') is True
@@ -752,7 +764,9 @@ class TestConsul(object):
             consul.ACLPermissionDenied, c.kv.delete, 'foo', token=token)
 
         assert c.kv.get('private/foo')[1]['Value'] == six.b('bar')
-        assert c.kv.get('private/foo', token=token)[1] is None
+        pytest.raises(
+            consul.ACLPermissionDenied,
+            c.kv.get, 'private/foo', token=token)
         pytest.raises(
             consul.ACLPermissionDenied,
             c.kv.put, 'private/foo', 'bar2', token=token)
@@ -761,7 +775,9 @@ class TestConsul(object):
             c.kv.delete, 'private/foo', token=token)
 
         # test token pass through for service registration
-        c.agent.service.register("bar-1", token=token)
+        pytest.raises(
+            consul.ACLPermissionDenied,
+            c.agent.service.register, "bar-1", token=token)
         c.agent.service.register("foo-1", token=token)
         index, data = c.health.service('foo-1', token=token)
         assert data[0]['Service']['ID'] == "foo-1"
@@ -772,7 +788,6 @@ class TestConsul(object):
 
         # clean up
         assert c.agent.service.deregister('foo-1') is True
-        assert c.agent.service.deregister('bar-1') is True
         c.acl.destroy(token, token=master_token)
         acls = c.acl.list(token=master_token)
         assert set([x['ID'] for x in acls]) == \
@@ -823,7 +838,9 @@ class TestConsul(object):
             consul.ACLPermissionDenied, c_limited.kv.delete, 'foo')
 
         assert c.kv.get('private/foo')[1]['Value'] == six.b('bar')
-        assert c_limited.kv.get('private/foo')[1] is None
+        pytest.raises(
+            consul.ACLPermissionDenied,
+            c_limited.kv.get, 'private/foo')
         pytest.raises(
             consul.ACLPermissionDenied,
             c_limited.kv.put, 'private/foo', 'bar2')
@@ -832,7 +849,10 @@ class TestConsul(object):
             c_limited.kv.delete, 'private/foo')
 
         # check we can override the client's default token
-        assert c.kv.get('private/foo', token=token)[1] is None
+        pytest.raises(
+            consul.ACLPermissionDenied,
+            c.kv.get, 'private/foo', token=token
+        )
         pytest.raises(
             consul.ACLPermissionDenied,
             c.kv.put, 'private/foo', 'bar2', token=token)
@@ -850,11 +870,8 @@ class TestConsul(object):
         c = consul.Consul(port=consul_port)
 
         agent_self = c.agent.self()
-        port = agent_self['Config']['Ports']['Server']
-        addr = agent_self['Config']['AdvertiseAddr']
-
-        addr_port = "{0}:{1}".format(addr, port)
         leader = c.status.leader()
+        addr_port = agent_self['Stats']['consul']['leader_addr']
 
         assert leader == addr_port, \
             "Leader value was {0}, expected value " \
@@ -865,10 +882,8 @@ class TestConsul(object):
         c = consul.Consul(port=consul_port)
 
         agent_self = c.agent.self()
-        port = agent_self['Config']['Ports']['Server']
-        addr = agent_self['Config']['AdvertiseAddr']
 
-        addr_port = "{0}:{1}".format(addr, port)
+        addr_port = agent_self['Stats']['consul']['leader_addr']
         peers = c.status.peers()
 
         assert addr_port in peers, \
@@ -910,7 +925,7 @@ class TestConsul(object):
         c.coordinate.nodes()
         c.coordinate.datacenters()
         assert set(c.coordinate.datacenters()[0].keys()) == \
-            set(['Datacenter', 'Coordinates'])
+            set(['Datacenter', 'Coordinates', 'AreaID'])
 
     def test_operator(self, consul_port):
         c = consul.Consul(port=consul_port)
