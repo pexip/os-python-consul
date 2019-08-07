@@ -1,3 +1,9 @@
+python-consul (1.1.0-1pexip3) pexip; urgency=medium
+
+  * Update version to force move python3-consul into main apt repository
+
+ -- Knut Saastad <knut.saastad@pexip.com>  Wed, 07 Aug 2019 09:56:42 +0000
+
 python-consul (1.1.0-1pexip2) pexip; urgency=medium
 
   * Move into main
