@@ -1,3 +1,9 @@
+python-consul (1.1.0-1pexip2) pexip; urgency=medium
+
+  * Move into main
+
+ -- Knut Saastad <knut.saastad@pexip.com>  Wed, 07 Aug 2019 07:00:42 +0000
+
 python-consul (1.1.0-1pexip1) pexip; urgency=medium
 
   * Update source to 1.1.0
